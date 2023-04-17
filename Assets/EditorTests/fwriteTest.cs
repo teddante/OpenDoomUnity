@@ -95,7 +95,7 @@ namespace Assets.EditorTests
 
         private class FaultyStream : MemoryStream
         {
-            private int _bytesWritten = 0;
+            private int _bytesWritten;
             private int _maxBytesBeforeError = 2;
 
             public override void Write(byte[] buffer, int offset, int count)

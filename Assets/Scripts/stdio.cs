@@ -11,17 +11,32 @@ namespace Assets.Scripts
             Console.Write(format);
         }
 
-        public static int fseek(FILE stream, long offset, int origin)
+        public static int fseek(Stream stream, long offset, int origin)
         {
-            try
+            if (stream == null)
             {
-                stream.Seek(offset, (SeekOrigin)origin);
-                return 0;
+                throw new ArgumentNullException(nameof(stream));
             }
-            catch (Exception)
+
+            if (origin < (int)SeekOrigin.Begin || origin > (int)SeekOrigin.End)
             {
-                return -1;
+                throw new ArgumentOutOfRangeException(nameof(origin));
             }
+
+            if (stream.CanSeek)
+            {
+                try
+                {
+                    stream.Seek(offset, (System.IO.SeekOrigin)origin);
+                    return 0;
+                }
+                catch (IOException)
+                {
+                    return -1;
+                }
+            }
+
+            return -1;
         }
 
         public static uint fread(byte[] ptr, uint size, uint count, FILE stream)
@@ -56,7 +71,7 @@ namespace Assets.Scripts
             }
 
             var totalBytesToWrite = size * count;
-            var bytesWritten = 0;
+            int bytesWritten;
 
             try
             {
@@ -133,6 +148,16 @@ namespace Assets.Scripts
             {
                 return -1;
             }
+        }
+
+        public static long ftell(Stream stream)
+        {
+            if (stream != null)
+            {
+                return stream.Position;
+            }
+
+            return -1L;
         }
     }
 }
