@@ -26,34 +26,51 @@ namespace Assets.Scripts
 
         public static uint fread(byte[] ptr, uint size, uint count, FILE stream)
         {
-            if (ptr == null || stream == null || size <= 0 || count <= 0) return 0;
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream), "The provided FileStream cannot be null.");
+            }
+
+            if (size == 0 || count == 0) return 0;
+
+            var bytesRead = 0;
+            var bytesToRead = size * count;
 
             try
             {
-                var bufferSize = size * count;
-                var bytesRead = (uint)stream.Read(ptr, 0, (int)bufferSize);
-                var elementsRead = bytesRead / size;
-                return elementsRead;
+                bytesRead = stream.Read(ptr, 0, (int)bytesToRead);
             }
             catch (Exception)
             {
-                // Handle any exceptions that occur during reading
-                return unchecked((uint)-1);
+                // ignored
             }
+
+            return (uint)(bytesRead / size);
         }
 
-        public static uint fwrite(byte[] ptr, uint size, uint count, FILE stream)
+        public static uint fwrite(byte[] buffer, uint size, uint count, Stream stream)
         {
-            if (ptr == null || size < 1 || count < 1 || stream == null) return 0;
+            if (size == 0 || count == 0)
+            {
+                return 0;
+            }
 
-            using var writer = new BinaryWriter(stream);
-            var elementsToWrite = size * count;
-            var bytesToWrite = Math.Min(ptr.Length, elementsToWrite);
+            var totalBytesToWrite = size * count;
+            var bytesWritten = 0;
 
-            writer.Write(ptr, 0, (int)bytesToWrite);
-            writer.Flush();
+            try
+            {
+                stream.Write(buffer, 0, (int)totalBytesToWrite);
+                bytesWritten = (int)totalBytesToWrite;
+            }
+            catch (IOException)
+            {
+                // Calculate the number of objects written successfully
+                var positionBeforeException = (int)stream.Position;
+                bytesWritten = positionBeforeException;
+            }
 
-            return (uint)(bytesToWrite / size);
+            return (uint)bytesWritten;
         }
 
         public static FILE fopen(string filename, string mode)
@@ -109,9 +126,10 @@ namespace Assets.Scripts
             {
                 stream.Flush();
                 stream.Dispose();
+
                 return 0;
             }
-            catch
+            catch (Exception)
             {
                 return -1;
             }
