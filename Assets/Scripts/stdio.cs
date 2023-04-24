@@ -4,7 +4,7 @@ using FILE = System.IO.FileStream;
 
 namespace Assets.Scripts
 {
-    public static class Global
+    public static partial class Global
     {
         public static void printf(string format)
         {
